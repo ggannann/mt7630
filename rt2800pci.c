@@ -587,7 +587,7 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
 			rt2x00pci_register_write(rt2x00dev, TX_RING_BASE + offset, entry_priv->desc_dma);
 			rt2x00pci_register_write(rt2x00dev, TX_RING_CNT + offset, rt2x00dev->tx[i].limit);
 			rt2x00pci_register_write(rt2x00dev, TX_RING_CIDX + offset, 0);
-			printk("-->TX_RING: Base=0x%x, Cnt=%d\n", entry_priv->desc_dma,rt2x00dev->tx[i].limit);
+			printk("-->TX_RING: Base=0x%x, Cnt=%d\n", (uint)entry_priv->desc_dma,rt2x00dev->tx[i].limit);
 		}
 
 		offset = 4 * 0x10;
@@ -607,7 +607,7 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
 
 		rt2x00pci_register_write(rt2x00dev, RX_RING_CIDX + 0x10, rt2x00dev->rx[0].limit - 1);
 
-		printk("-->RX_RING: Base=0x%x, Cnt=%d\n", entry_priv->desc_dma,rt2x00dev->rx[0].limit);
+		printk("-->RX_RING: Base=0x%x, Cnt=%d\n", (int)entry_priv->desc_dma,rt2x00dev->rx[0].limit);
 		printk("InitTxRxRing\n");
 
 		/*
@@ -1020,6 +1020,7 @@ static void rt2800pci_write_tx_desc(struct queue_entry *entry,
 
 	if (rt2x00_rt(rt2x00dev, MT7630))
 	{
+		struct _TXINFO_NMAC_PKT *nmac_info;
 		pTxD->SDPtr0 = skbdesc->skb_dma;
 		pTxD->SDLen0 = TXWI_DESC_SIZE_7630;	/* include padding*/
 		pTxD->SDPtr1 = skbdesc->skb_dma + TXWI_DESC_SIZE_7630;
@@ -1028,7 +1029,6 @@ static void rt2800pci_write_tx_desc(struct queue_entry *entry,
 		pTxD->LastSec1 =  !test_bit(ENTRY_TXD_MORE_FRAG, &txdesc->flags);
 		//pTxD->DMADONE= 0;
 		pTxD->Burst= test_bit(ENTRY_TXD_BURST, &txdesc->flags);
-		struct _TXINFO_NMAC_PKT *nmac_info;
 		nmac_info = (struct _TXINFO_NMAC_PKT *)pTxInfo;
 		nmac_info->pkt_80211 = 1;
 		nmac_info->info_type = 0;
@@ -1136,31 +1136,28 @@ static void rt2800pci_fill_rxdone(struct queue_entry *entry,
 	u32 word;
 	struct data_queue *queue;
 	struct rt2x00_dev *rt2x00dev;
-	//printk("===>%s:MT7630\n", __FUNCTION__);
+
 	queue = entry->queue;
 	rt2x00dev = queue->rt2x00dev;
 
-	if (rt2x00_rt(rt2x00dev, MT7630))
-	{
-			//MT_2800pci_hex_dump("rxd", rxd, 16);
-			unsigned char hw_rx_info[16];
-			unsigned char hw_fce[4];
-			__le32 *destrxd = NULL;
+	if (rt2x00_rt(rt2x00dev, MT7630)) {
+		//MT_2800pci_hex_dump("rxd", rxd, 16);
+		unsigned char hw_rx_info[16];
+		unsigned char hw_fce[4];
+		__le32 *destrxd = NULL;
 
-			memcpy(&hw_rx_info[0], rxd,12);
-			memcpy(&hw_fce[0], rxd+12,4);
-			destrxd = (__le32 *) entry->skb->data; 	//woody
-			memcpy(&hw_rx_info[12], destrxd,4);
-
-			
-			rxd = &hw_rx_info[0];
-			//MT_2800pci_hex_dump("rxd", rxd, 16);
-			//MT_2800pci_hex_dump("skb->data(0)", entry->skb->data, 64);
-			//rt2x00_desc_read(hw_rx_info, 0, &word);
-			rt2x00_desc_read(rxd, 3, &word);
-			skb_pull(entry->skb, 4);
-			//MT_2800pci_hex_dump("skb->data(1)", entry->skb->data, entry->skb->len);
-			
+		memcpy(&hw_rx_info[0], rxd,12);
+		memcpy(&hw_fce[0], rxd+12,4);
+		destrxd = (__le32 *) entry->skb->data; 	//woody
+		memcpy(&hw_rx_info[12], destrxd,4);
+		
+		rxd = &hw_rx_info[0];
+		//MT_2800pci_hex_dump("rxd", rxd, 16);
+		//MT_2800pci_hex_dump("skb->data(0)", entry->skb->data, 64);
+		//rt2x00_desc_read(hw_rx_info, 0, &word);
+		rt2x00_desc_read(rxd, 3, &word);
+		skb_pull(entry->skb, 4);
+		//MT_2800pci_hex_dump("skb->data(1)", entry->skb->data, entry->skb->len);
 	} else {
 			rt2x00_desc_read(rxd, 3, &word);
 	}
@@ -1338,8 +1335,8 @@ static inline void rt2800pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
 
 static void rt2800pci_txstatus_tasklet(unsigned long data)
 {
-	printk("===>%s:MT7630\n", __FUNCTION__);
 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
+
 	if (rt2800pci_txdone(rt2x00dev))
 		tasklet_schedule(&rt2x00dev->txstatus_tasklet);
 
@@ -1505,8 +1502,8 @@ static void rt2800pci_tx3damdone_tasklet(unsigned long data)
 
 static void rt2800pci_pretbtt_tasklet(unsigned long data)
 {
-	printk("===>%s:MT7630\n", __FUNCTION__);
 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
+
 	rt2x00lib_pretbtt(rt2x00dev);
 	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags)) {
 		if (rt2x00_rt(rt2x00dev, MT7630))
@@ -1590,8 +1587,8 @@ static void rt2800pci_rxdone_tasklet(unsigned long data)
 
 static void rt2800pci_autowake_tasklet(unsigned long data)
 {
-	printk("===>%s:MT7630\n", __FUNCTION__);
 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
+
 	rt2800pci_wakeup(rt2x00dev);
 	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags)) {
 		if (rt2x00_rt(rt2x00dev, MT7630))

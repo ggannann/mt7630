@@ -38,7 +38,7 @@ extern void MT76x0_WLAN_ChipOnOff(
 	int bResetWLAN);
 
 
-extern rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev);
+extern int rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev);
 /*
  * Register access.
  */
@@ -164,7 +164,7 @@ static int rt2x00pci_alloc_queue_dma(struct rt2x00_dev *rt2x00dev,
 		entry_priv->desc_dma = dma + i * queue->desc_size;
 			
 		if (queue->qid==QID_RX)
-		printk("[%d]entry_priv->desc=0x%x entry_priv->desc_dma=0x%x\n",i,entry_priv->desc,entry_priv->desc_dma);
+		printk("[%d]entry_priv->desc=0x%x entry_priv->desc_dma=0x%x\n",i,entry_priv->desc,(uint)entry_priv->desc_dma);
 	}
 
 	return 0;
@@ -173,10 +173,10 @@ static int rt2x00pci_alloc_queue_dma(struct rt2x00_dev *rt2x00dev,
 static void rt2x00pci_free_queue_dma(struct rt2x00_dev *rt2x00dev,
 				     struct data_queue *queue)
 {
-	printk("rt2x00pci_free_queue_dma\n");
 	struct queue_entry_priv_pci *entry_priv =
 	    queue->entries[0].priv_data;
 
+	printk("rt2x00pci_free_queue_dma\n");
 	if (entry_priv->desc)
 		dma_free_coherent(rt2x00dev->dev,
 				  queue->limit * queue->desc_size,
@@ -261,7 +261,7 @@ static int rt2x00pci_alloc_reg(struct rt2x00_dev *rt2x00dev)
 {
 	struct pci_dev *pci_dev = to_pci_dev(rt2x00dev->dev);
 
-	printk("pci_resource_len = 0x%x\n",pci_resource_len(pci_dev, 0));
+	printk("pci_resource_len = 0x%x\n",(uint)pci_resource_len(pci_dev, 0));
 	rt2x00dev->csr.base = pci_ioremap_bar(pci_dev, 0);
 	//rt2x00dev->csr.base = (unsigned long) ioremap(pci_resource_start(pci_dev, 0), pci_resource_len(pci_dev, 0));
 #if 0

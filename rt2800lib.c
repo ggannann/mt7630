@@ -1349,27 +1349,18 @@ static void rt2800_MT7630_rfcsr_write(struct rt2x00_dev *rt2x00dev,
 {
 	RLT_RF_CSR_CFG rfcsr = { { 0 } };
 	unsigned int i = 1;
-	int	 ret;
 
-
-
-	//ASSERT((word <= 127));
-
-	ret = 0;
-	do
-	{
+	do {
 		rt2800_register_read(rt2x00dev, RF_CSR_CFG, &rfcsr.word);
 
 		if (!rfcsr.field.RF_CSR_KICK)
 			break;
 		i++;
-	}
-	while ((i < 100));
+	} while ((i < 100));
 
-	if ((i == 100))
-	{
+	if ((i == 100)) {
 		printk("rt2800_MT7630_rfcsr_write Retry count exhausted or device removed!!!\n");
-		goto done;
+		return;
 	}
 
 	rfcsr.field.RF_CSR_WR = 1;
@@ -1380,27 +1371,15 @@ static void rt2800_MT7630_rfcsr_write(struct rt2x00_dev *rt2x00dev,
 	rfcsr.field.RF_CSR_DATA = value;
 	rt2800_register_write(rt2x00dev, RF_CSR_CFG, rfcsr.word);
 	//printk("rlt_rf_write bank=0x%x ID=0x%x value=0x%x\n",bank, word, value);
-	ret = 0;
-
-done:
-	return ret;
 }
-
 
 static void rt2800_MT7630_rfcsr_read(struct rt2x00_dev *rt2x00dev,
 			       const u8 word, u8 *value,const u8 bank)
 {
 	RLT_RF_CSR_CFG rfcsr = { { 0 } };
 	unsigned int i=0, k=0;
-	int	 ret = 1;
 
-
-
-	//ASSERT((word <= 127));
-
-	for (i=0; i<100; i++)
-	{
-			
+	for (i=0; i<100; i++) {
 		rt2800_register_read(rt2x00dev, RF_CSR_CFG, &rfcsr.word);
 
 		if (rfcsr.field.RF_CSR_KICK == 1)
@@ -1413,8 +1392,7 @@ static void rt2800_MT7630_rfcsr_read(struct rt2x00_dev *rt2x00dev,
 		rfcsr.field.RF_CSR_REG_BANK = bank;
 		rt2800_register_write(rt2x00dev, RF_CSR_CFG, rfcsr.word);
 		
-		for (k=0; k<100; k++)
-		{		
+		for (k=0; k<100; k++) {		
 			rt2800_register_read(rt2x00dev, RF_CSR_CFG, &rfcsr.word);
 
 			if (rfcsr.field.RF_CSR_KICK == 0)
@@ -1430,72 +1408,11 @@ static void rt2800_MT7630_rfcsr_read(struct rt2x00_dev *rt2x00dev,
 		}
 	}
 
-	if (rfcsr.field.RF_CSR_KICK == 1)
-	{																	
+	if (rfcsr.field.RF_CSR_KICK == 1) {
 		printk("RF read R%d=0x%X fail, i[%d], k[%d]\n", word, rfcsr.word,i,k);
-		goto done;
 	}
-	ret = 0;
-
-done:
-	return ret;
 }
 
-#if 0			       
-static void rt2800_MT7630_rfcsr_write(struct rt2x00_dev *rt2x00dev,
-			       const u8 word, const u8 value,const u8 bank)
-{
-	u32 reg;
-
-	mutex_lock(&rt2x00dev->csr_mutex);
-
-	/*
-	 * Wait until the RFCSR becomes available, afterwards we
-	 * can safely write the new data into the register.
-	 */
-	if (WAIT_FOR_RFCSR_MT7630(rt2x00dev, &reg)) {
-		reg = 0;
-		rt2x00_set_field32(&reg, RF_CSR_CFG_REG_ID_MT7630, word);
-		rt2x00_set_field32(&reg, RF_CSR_CFG_BANK_MT7630, bank);
-		rt2x00_set_field32(&reg, RF_CSR_CFG_WRITE_MT7630, 1);
-		rt2x00_set_field32(&reg, RF_CSR_CFG_BUSY_MT7630, 1);
-		rt2x00_set_field32(&reg, RF_CSR_CFG_DATA_MT7630, value);
-
-		rt2800_register_write_lock(rt2x00dev, RF_CSR_CFG, reg);
-		//printk("rlt_rf_write bank=0x%x ID=0x%x value=0x%x\n",bank,word,value);
-	}
-
-	mutex_unlock(&rt2x00dev->csr_mutex);
-	//printk("rt2800_MT7630_rfcsr_write bank=0x%x ID=0x%x value=0x%x\n",bank,word,value);
-}
-
-static void rt2800_MT7630_rfcsr_read(struct rt2x00_dev *rt2x00dev,
-			       const u8 word, u8 *value,const u8 bank)
-{
-	u32 reg;
-
-	mutex_lock(&rt2x00dev->csr_mutex);
-
-	/*
-	 * Wait until the RFCSR becomes available, afterwards we
-	 * can safely write the new data into the register.
-	 */
-	if (WAIT_FOR_RFCSR_MT7630(rt2x00dev, &reg)) {
-		reg = 0;
-		rt2x00_set_field32(&reg, RF_CSR_CFG_REG_ID_MT7630, word);
-		rt2x00_set_field32(&reg, RF_CSR_CFG_BANK_MT7630, bank);
-		rt2x00_set_field32(&reg, RF_CSR_CFG_WRITE_MT7630, 0);
-		rt2x00_set_field32(&reg, RF_CSR_CFG_BUSY_MT7630, 1);
-
-		rt2800_register_write_lock(rt2x00dev, RF_CSR_CFG, reg);
-
-		WAIT_FOR_RFCSR_MT7630(rt2x00dev, &reg);
-	}
-
-	*value = rt2x00_get_field32(reg, RF_CSR_CFG_DATA_MT7630);
-	mutex_unlock(&rt2x00dev->csr_mutex);
-}
-#endif
 static int rt2800_enable_wlan_mt7630(struct rt2x00_dev *rt2x00dev)
 {
 	u32 reg;
@@ -4945,15 +4862,15 @@ static void rt2800_config_retry_limit(struct rt2x00_dev *rt2x00dev,
 static void rt2800_config_ps(struct rt2x00_dev *rt2x00dev,
 			     struct rt2x00lib_conf *libconf)
 {
-	//printk("===>%s\n",__FUNCTION__);
-	if (rt2x00_rt(rt2x00dev, MT7630))
-		return;
-	
 	enum dev_state state =
 	    (libconf->conf->flags & IEEE80211_CONF_PS) ?
 		STATE_SLEEP : STATE_AWAKE;
 	u32 reg;
 
+	//printk("===>%s\n",__FUNCTION__);
+	if (rt2x00_rt(rt2x00dev, MT7630))
+		return;
+	
 	if (state == STATE_SLEEP) {
 		rt2800_register_write(rt2x00dev, AUTOWAKEUP_CFG, 0);
 
@@ -5065,10 +4982,10 @@ void rt2800_link_tuner(struct rt2x00_dev *rt2x00dev, struct link_qual *qual,
 	unsigned int i;
 	if (rt2x00_rt(rt2x00dev, MT7630))
 	{
+		u32 reg;
 		if (rt2x00dev->bprint==1)
 			return;
 		
-		u32 reg;
 		reg=0;
 		rt2800_register_read(rt2x00dev, 0x0208, &reg);
 		//printk(" rt2800_link_tuner 0x0208 = 0x%x\n",reg);
@@ -6230,6 +6147,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
 
 	if (rt2x00_rt(rt2x00dev, MT7630))
 	{
+		unsigned char BBPCurrentBW = BW_20;
 		printk("%s(): Init RF Registers MT7630\n", __FUNCTION__);
 		for(IdReg = 0; IdReg < MT76x0_RF_Central_RegTb_Size; IdReg++)
 		{
@@ -6263,7 +6181,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
 						MT76x0_RF_VGA_Channel_0_RegTb[IdReg].Bank);
 		}
 
-		unsigned char BBPCurrentBW = BW_20;
 		for(IdReg = 0; IdReg < MT76x0_RF_BW_Switch_Size; IdReg++)
 		{
 			if (BBPCurrentBW == MT76x0_RF_BW_Switch[IdReg].BwBand)
@@ -6939,7 +6856,7 @@ static int rt2800lib_init_queues(struct rt2x00_dev *rt2x00dev)
 			rt2800_register_write(rt2x00dev, TX_RING_BASE + offset, entry_priv->desc_dma);
 			rt2800_register_write(rt2x00dev, TX_RING_CNT + offset, rt2x00dev->tx[i].limit);
 			rt2800_register_write(rt2x00dev, TX_RING_CIDX + offset, 0);
-			printk("-->TX_RING: Base=0x%x, Cnt=%d\n", entry_priv->desc_dma,rt2x00dev->tx[i].limit);
+			printk("-->TX_RING: Base=0x%x, Cnt=%d\n", (uint)entry_priv->desc_dma,rt2x00dev->tx[i].limit);
 		}
 
 		offset = 4 * 0x10;
@@ -6958,7 +6875,7 @@ static int rt2800lib_init_queues(struct rt2x00_dev *rt2x00dev)
 		rt2800_register_write(rt2x00dev, RX_RING_CIDX, rt2x00dev->rx[0].limit - 1);
 		rt2800_register_write(rt2x00dev, RX_RING_CIDX + 0x10, rt2x00dev->rx[0].limit - 1);
 
-		printk("-->RX_RING: Base=0x%x, Cnt=%d\n", entry_priv->desc_dma,rt2x00dev->rx[0].limit);
+		printk("-->RX_RING: Base=0x%x, Cnt=%d\n", (uint)entry_priv->desc_dma,rt2x00dev->rx[0].limit);
 		printk("InitTxRxRing\n");
 
 		/*

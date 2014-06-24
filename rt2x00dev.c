@@ -64,7 +64,7 @@ static inline void rt2x00dev_pci_register_write(struct rt2x00_dev *rt2x00dev,
 					    u32 value)
 {
 #if 1
-		if (((offset) >= 0x2000 & (offset) < 0x2a00)|| (offset)  == 0x0500)	
+		if (((offset) >= 0x2000 && (offset) < 0x2a00)|| (offset)  == 0x0500)	
 			;	
 		else	
 			printk("rt2x00dev_pci_register_write 0x%x = 0x%x\n",(offset),(value));
@@ -98,7 +98,6 @@ EXPORT_SYMBOL_GPL(rt2x00lib_get_bssidx);
 int rt2x00lib_enable_radio(struct rt2x00_dev *rt2x00dev)
 {
 	int status;
-	printk("===>%s\n",__FUNCTION__);
 	unsigned int i=0;
 	u32 reg;
 	
@@ -1110,7 +1109,7 @@ static void rt2x00lib_uninitialize(struct rt2x00_dev *rt2x00dev)
 	rt2x00queue_uninitialize(rt2x00dev);
 }
 
-rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev)
+int rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev)
 {
 	int status;
 
@@ -1188,8 +1187,8 @@ int rt2x00lib_start(struct rt2x00_dev *rt2x00dev)
 
 
 
-	if (rt2x00_rt(rt2x00dev, MT7630))
-	{
+	if (rt2x00_rt(rt2x00dev, MT7630)) {
+		u32 reg = 0;
 		if (WaitForAsicReady(rt2x00dev) != 1)
 			return -EINVAL;
 		else
@@ -1198,7 +1197,6 @@ int rt2x00lib_start(struct rt2x00_dev *rt2x00dev)
 		if (rt2800_dev_wait_csr_ready(rt2x00dev))
 			return -EBUSY;
 		rt2x00dev_pci_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000000);
-		u32 reg = 0;
 
 		rt2x00dev_pci_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
 		reg &= 0xff0;

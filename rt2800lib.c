@@ -1856,7 +1856,7 @@ void rt2800_write_tx_data(struct queue_entry *entry,
 	/*
 	 * Initialize TX Info descriptor
 	 */
-	 pTxWI = txwi;
+	 pTxWI = (TXWI_STRUC *)txwi;
 
 	if (rt2x00_rt(rt2x00dev, MT7630))
 	{
@@ -2137,9 +2137,8 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
 	rt2x00_desc_read(txwi, 0, &word);
 
 	
-	if (rt2x00_rt(rt2x00dev, MT7630))
-	{
-		pTxWI = txwi;
+	if (rt2x00_rt(rt2x00dev, MT7630)) {
+		pTxWI = (TXWI_STRUC *)txwi;
 		mcs= pTxWI->TxWIMCS;
 		ampdu=pTxWI->TxWIAMPDU;
 

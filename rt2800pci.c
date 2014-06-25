@@ -42,7 +42,6 @@
 
 #include "rt2x00.h"
 #include "rt2x00pci.h"
-#include "rt2x00soc.h"
 #include "rt2800lib.h"
 #include "rt2800.h"
 #include "rt2800pci.h"
@@ -1014,7 +1013,7 @@ static void rt2800pci_write_tx_desc(struct queue_entry *entry,
 	TXINFO_STRUC *pTxInfo;
 	//printk("==>rt2800pci_write_tx_desc\n");
 
-	pTxD = entry_priv->desc;
+	pTxD = (TXD_STRUC *)entry_priv->desc;
 	pTxInfo = (TXINFO_STRUC *)(entry_priv->desc + sizeof(TXD_STRUC));
 	memset(pTxD, 0, 16);
 

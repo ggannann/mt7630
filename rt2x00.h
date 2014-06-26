@@ -39,6 +39,7 @@
 #include <linux/input-polldev.h>
 #include <linux/kfifo.h>
 #include <linux/hrtimer.h>
+#include <linux/version.h>
 
 #include <net/mac80211.h>
 
@@ -1362,7 +1363,13 @@ void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp);
 /*
  * mac80211 handlers.
  */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
+void rt2x00mac_tx(struct ieee80211_hw *hw,
+		  struct ieee80211_tx_control *control,
+		  struct sk_buff *skb);
+#else
 void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+#endif
 int rt2x00mac_start(struct ieee80211_hw *hw);
 void rt2x00mac_stop(struct ieee80211_hw *hw);
 int rt2x00mac_add_interface(struct ieee80211_hw *hw,

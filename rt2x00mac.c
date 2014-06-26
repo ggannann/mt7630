@@ -25,6 +25,7 @@
 
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/version.h>
 
 #include "rt2x00.h"
 #include "rt2x00lib.h"
@@ -99,7 +100,13 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
 	return retval;
 }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
+void rt2x00mac_tx(struct ieee80211_hw *hw,
+		  struct ieee80211_tx_control *control,
+		  struct sk_buff *skb)
+#else
 void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+#endif
 {
 	struct rt2x00_dev *rt2x00dev = hw->priv;
 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);

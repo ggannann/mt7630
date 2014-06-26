@@ -252,7 +252,11 @@ static void rt2x00lib_bc_buffer_iter(void *data, u8 *mac,
 	 */
 	skb = ieee80211_get_buffered_bc(rt2x00dev->hw, vif);
 	while (skb) {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
+		rt2x00mac_tx(rt2x00dev->hw, NULL, skb);
+#else
 		rt2x00mac_tx(rt2x00dev->hw, skb);
+#endif
 		skb = ieee80211_get_buffered_bc(rt2x00dev->hw, vif);
 	}
 }

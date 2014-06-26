@@ -29,6 +29,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/dma-mapping.h>
+#include <linux/version.h>
 
 #include "rt2x00.h"
 #include "rt2x00lib.h"
@@ -347,16 +348,33 @@ static void rt2x00queue_create_tx_descriptor_plcp(struct rt2x00_dev *rt2x00dev,
 	}
 }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
+static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+						struct sk_buff *skb,
+						struct txentry_desc *txdesc,
+						struct ieee80211_sta *sta,
+						const struct rt2x00_rate *hwrate)
+#else
 static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
 						struct sk_buff *skb,
 						struct txentry_desc *txdesc,
 						const struct rt2x00_rate *hwrate)
+#endif
 {
 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
 	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
 	struct rt2x00_sta *sta_priv = NULL;
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
+	if (sta) {
+		txdesc->u.ht.mpdu_density =
+		    sta->ht_cap.ampdu_density;
+
+		sta_priv = sta_to_rt2x00_sta(sta);
+		txdesc->u.ht.wcid = sta_priv->wcid;
+	}
+#else
 	if (tx_info->control.sta) {
 		txdesc->u.ht.mpdu_density =
 		    tx_info->control.sta->ht_cap.ampdu_density;
@@ -364,6 +382,7 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
 		sta_priv = sta_to_rt2x00_sta(tx_info->control.sta);
 		txdesc->u.ht.wcid = sta_priv->wcid;
 	}
+#endif
 
 	/*
 	 * If IEEE80211_TX_RC_MCS is set txrate->idx just contains the
@@ -376,11 +395,19 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
 		 * MIMO PS should be set to 1 for STA's using dynamic SM PS
 		 * when using more then one tx stream (>MCS7).
 		 */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
+		if (sta && txdesc->u.ht.mcs > 7 &&
+		    ((sta->ht_cap.cap &
+		      IEEE80211_HT_CAP_SM_PS) >>
+		     IEEE80211_HT_CAP_SM_PS_SHIFT) ==
+		    WLAN_HT_CAP_SM_PS_DYNAMIC)
+#else
 		if (tx_info->control.sta && txdesc->u.ht.mcs > 7 &&
 		    ((tx_info->control.sta->ht_cap.cap &
 		      IEEE80211_HT_CAP_SM_PS) >>
 		     IEEE80211_HT_CAP_SM_PS_SHIFT) ==
 		    WLAN_HT_CAP_SM_PS_DYNAMIC)
+#endif
 			__set_bit(ENTRY_TXD_HT_MIMO_PS, &txdesc->flags);
 	} else {
 		txdesc->u.ht.mcs = rt2x00_get_rate_mcs(hwrate->mcs);
@@ -442,9 +469,16 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
 		txdesc->u.ht.txop = TXOP_HTTXOP;
 }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
+static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
+					     struct sk_buff *skb,
+					     struct txentry_desc *txdesc,
+					     struct ieee80211_sta *sta)
+#else
 static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
 					     struct sk_buff *skb,
 					     struct txentry_desc *txdesc)
+#endif
 {
 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
@@ -538,6 +572,9 @@ static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
 
 	if (test_bit(REQUIRE_HT_TX_DESC, &rt2x00dev->cap_flags))
 		rt2x00queue_create_tx_descriptor_ht(rt2x00dev, skb, txdesc,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
+						    sta,
+#endif
 						    hwrate);
 	else
 		rt2x00queue_create_tx_descriptor_plcp(rt2x00dev, skb, txdesc,
@@ -633,7 +670,11 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
 	 * after that we are free to use the skb->cb array
 	 * for our information.
 	 */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
+	rt2x00queue_create_tx_descriptor(queue->rt2x00dev, skb, &txdesc, NULL);
+#else
 	rt2x00queue_create_tx_descriptor(queue->rt2x00dev, skb, &txdesc);
+#endif
 
 	/*
 	 * All information is retrieved from the skb->cb array,
@@ -781,7 +822,11 @@ int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
 	 * after that we are free to use the skb->cb array
 	 * for our information.
 	 */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
+	rt2x00queue_create_tx_descriptor(rt2x00dev, intf->beacon->skb, &txdesc, NULL);
+#else
 	rt2x00queue_create_tx_descriptor(rt2x00dev, intf->beacon->skb, &txdesc);
+#endif
 
 	/*
 	 * Fill in skb descriptor

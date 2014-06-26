@@ -25,6 +25,7 @@
 
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/version.h>
 
 #include "rt2x00.h"
 #include "rt2x00lib.h"
@@ -102,7 +103,11 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
 
 	/* Update the AID, this is needed for dynamic PS support */
 	rt2x00dev->aid = bss_conf->assoc ? bss_conf->aid : 0;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0))
+	rt2x00dev->last_beacon = bss_conf->sync_tsf;
+#else
 	rt2x00dev->last_beacon = bss_conf->last_tsf;
+#endif
 
 	/* Update global beacon interval time, this is needed for PS support */
 	rt2x00dev->beacon_int = bss_conf->beacon_int;

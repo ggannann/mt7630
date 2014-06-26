@@ -4602,9 +4602,15 @@ static u8 rt2800_compensate_txpower(struct rt2x00_dev *rt2x00dev, int is_rate_b,
  * EEPROM_TXPOWER_BYRATE offset. We adjust them and BBP R1 settings according to
  * current conditions (i.e. band, bandwidth, temperature, user settings).
  */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
+				  struct ieee80211_channel *chan,
+				  int power_level)
+#else
 static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
 				  enum ieee80211_band band,
 				  int power_level)
+#endif
 {
 	u8 txpower;
 	u16 eeprom;
@@ -4613,7 +4619,9 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
 	u8 r1;
 	u32 offset;
 	int delta;
-
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+	enum ieee80211_band band = chan->band;
+#endif
 
 	if (rt2x00_rt(rt2x00dev, MT7630))
 		return;
@@ -4751,8 +4759,13 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
 void rt2800_gain_calibration(struct rt2x00_dev *rt2x00dev)
 {
 	//printk("===>%s:MT7630\n", __FUNCTION__);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+	rt2800_config_txpower(rt2x00dev, rt2x00dev->hw->conf.chandef.chan,
+			      rt2x00dev->tx_power);
+#else
 	rt2800_config_txpower(rt2x00dev, rt2x00dev->curr_band,
 			      rt2x00dev->tx_power);
+#endif
 }
 EXPORT_SYMBOL_GPL(rt2800_gain_calibration);
 
@@ -4901,6 +4914,17 @@ void rt2800_config(struct rt2x00_dev *rt2x00dev,
 	/* Always recalculate LNA gain before changing configuration */
 	rt2800_config_lna_gain(rt2x00dev, libconf);
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+	if (flags & IEEE80211_CONF_CHANGE_CHANNEL) {
+		rt2800_config_channel(rt2x00dev, libconf->conf,
+				      &libconf->rf, &libconf->channel);
+		rt2800_config_txpower(rt2x00dev, libconf->conf->chandef.chan,
+				      libconf->conf->power_level);
+	}
+	if (flags & IEEE80211_CONF_CHANGE_POWER)
+		rt2800_config_txpower(rt2x00dev, libconf->conf->chandef.chan,
+				      libconf->conf->power_level);
+#else
 	if (flags & IEEE80211_CONF_CHANGE_CHANNEL) {
 		rt2800_config_channel(rt2x00dev, libconf->conf,
 				      &libconf->rf, &libconf->channel);
@@ -4910,6 +4934,7 @@ void rt2800_config(struct rt2x00_dev *rt2x00dev,
 	if (flags & IEEE80211_CONF_CHANGE_POWER)
 		rt2800_config_txpower(rt2x00dev, libconf->conf->channel->band,
 				      libconf->conf->power_level);
+#endif
 	if (flags & IEEE80211_CONF_CHANGE_RETRY_LIMITS)
 		rt2800_config_retry_limit(rt2x00dev, libconf);
 	if (flags & IEEE80211_CONF_CHANGE_PS)
@@ -8254,7 +8279,11 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
 	if (idx != 0)
 		return -ENOENT;
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+	survey->channel = conf->chandef.chan;
+#else
 	survey->channel = conf->channel;
+#endif
 
 	rt2800_register_read(rt2x00dev, CH_IDLE_STA, &idle);
 	rt2800_register_read(rt2x00dev, CH_BUSY_STA, &busy);

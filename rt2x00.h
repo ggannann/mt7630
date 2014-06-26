@@ -1406,7 +1406,11 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw,
 		      struct ieee80211_vif *vif, u16 queue,
 		      const struct ieee80211_tx_queue_params *params);
 void rt2x00mac_rfkill_poll(struct ieee80211_hw *hw);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+void rt2x00mac_flush(struct ieee80211_hw *hw, u32 queues, bool drop);
+#else
 void rt2x00mac_flush(struct ieee80211_hw *hw, bool drop);
+#endif
 int rt2x00mac_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant);
 int rt2x00mac_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant);
 void rt2x00mac_get_ringparam(struct ieee80211_hw *hw,

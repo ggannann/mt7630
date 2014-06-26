@@ -189,7 +189,11 @@ static u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
 	/*
 	 * Initialize center channel to current channel.
 	 */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+	center_channel = spec->channels[conf->chandef.chan->hw_value].channel;
+#else
 	center_channel = spec->channels[conf->channel->hw_value].channel;
+#endif
 
 	/*
 	 * Adjust center channel to HT40+ and HT40- operation.
@@ -204,7 +208,11 @@ static u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
 			return i;
 
 	WARN_ON(1);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+	return conf->chandef.chan->hw_value;
+#else
 	return conf->channel->hw_value;
+#endif
 }
 
 void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
@@ -232,7 +240,11 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
 			hw_value = rt2x00ht_center_channel(rt2x00dev, conf);
 		} else {
 			clear_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+			hw_value = conf->chandef.chan->hw_value;
+#else
 			hw_value = conf->channel->hw_value;
+#endif
 		}
 
 		memcpy(&libconf.rf,
@@ -287,8 +299,13 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
 	else
 		clear_bit(CONFIG_POWERSAVING, &rt2x00dev->flags);
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+	rt2x00dev->curr_band = conf->chandef.chan->band;
+	rt2x00dev->curr_freq = conf->chandef.chan->center_freq;
+#else
 	rt2x00dev->curr_band = conf->channel->band;
 	rt2x00dev->curr_freq = conf->channel->center_freq;
+#endif
 	rt2x00dev->tx_power = conf->power_level;
 	rt2x00dev->short_retry = conf->short_frame_max_tx_count;
 	rt2x00dev->long_retry = conf->long_frame_max_tx_count;

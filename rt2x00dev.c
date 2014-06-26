@@ -28,6 +28,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/log2.h>
+#include <linux/version.h>
 
 #include "rt2x00.h"
 #include "rt2x00lib.h"
@@ -215,6 +216,9 @@ static void rt2x00lib_intf_scheduled(struct work_struct *work)
 	 * requested configurations.
 	 */
 	ieee80211_iterate_active_interfaces(rt2x00dev->hw,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+					    IEEE80211_IFACE_ITER_RESUME_ALL,
+#endif
 					    rt2x00lib_intf_scheduled_iter,
 					    rt2x00dev);
 }
@@ -288,6 +292,9 @@ void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
 
 	/* send buffered bc/mc frames out for every bssid */
 	ieee80211_iterate_active_interfaces_atomic(rt2x00dev->hw,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+						   IEEE80211_IFACE_ITER_RESUME_ALL,
+#endif
 						   rt2x00lib_bc_buffer_iter,
 						   rt2x00dev);
 	/*
@@ -300,6 +307,9 @@ void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
 
 	/* fetch next beacon */
 	ieee80211_iterate_active_interfaces_atomic(rt2x00dev->hw,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+						   IEEE80211_IFACE_ITER_RESUME_ALL,
+#endif
 						   rt2x00lib_beaconupdate_iter,
 						   rt2x00dev);
 }
@@ -312,6 +322,9 @@ void rt2x00lib_pretbtt(struct rt2x00_dev *rt2x00dev)
 
 	/* fetch next beacon */
 	ieee80211_iterate_active_interfaces_atomic(rt2x00dev->hw,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+						   IEEE80211_IFACE_ITER_RESUME_ALL,
+#endif
 						   rt2x00lib_beaconupdate_iter,
 						   rt2x00dev);
 }

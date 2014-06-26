@@ -39,6 +39,7 @@
 #include <linux/pci.h>
 #include <linux/platform_device.h>
 #include <linux/eeprom_93cx6.h>
+#include <linux/version.h>
 
 #include "rt2x00.h"
 #include "rt2x00pci.h"
@@ -2047,7 +2048,11 @@ static struct platform_driver rt2800soc_driver = {
 		.mod_name	= KBUILD_MODNAME,
 	},
 	.probe		= rt2800soc_probe,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+	.remove		= rt2x00soc_remove,
+#else
 	.remove		= __devexit_p(rt2x00soc_remove),
+#endif
 	.suspend	= rt2x00soc_suspend,
 	.resume		= rt2x00soc_resume,
 };
@@ -2064,7 +2069,11 @@ static struct pci_driver rt2800pci_driver = {
 	.name		= KBUILD_MODNAME,
 	.id_table	= rt2800pci_device_table,
 	.probe		= rt2800pci_probe,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+	.remove		= rt2x00pci_remove,
+#else
 	.remove		= __devexit_p(rt2x00pci_remove),
+#endif
 	.suspend	= rt2x00pci_suspend,
 	.resume		= rt2x00pci_resume,
 };

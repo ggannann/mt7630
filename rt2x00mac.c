@@ -472,6 +472,9 @@ int rt2x00mac_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
 		return 0;
 
 	ieee80211_iterate_active_interfaces_atomic(rt2x00dev->hw,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
+						   IEEE80211_IFACE_ITER_RESUME_ALL,
+#endif
 						   rt2x00mac_set_tim_iter,
 						   rt2x00dev);
 

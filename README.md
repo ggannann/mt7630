@@ -2,8 +2,7 @@ MT7630
 ======
 
 Here you can find the linux driver for MediaTek (Ralink) 7630 wifi
-card. The current status of the driver is it works under 3.5, and
-possibly fails to even compile in later version of kernels.
+card. This version builds under kernels 3.5 - 3.16 (inclusive).
 
 If you are a kernel developer, feel free to fix this driver up and
 push it to mainline kernel. The code is put here so someone can pick
